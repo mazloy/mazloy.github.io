@@ -7,18 +7,23 @@ let loadingTimer;
 
 filmLinks.forEach((filmLink) => filmLink.addEventListener('click', (event) => {
   // Preserve open-in-new-tab gestures and the direct link as a no-JS fallback.
-  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || !dialog.showModal) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || !dialog?.showModal) return;
   event.preventDefault();
   activeFilmLink = filmLink;
-  const { film, title, year, duration } = filmLink.dataset;
+  const { film, provider, title, year, duration } = filmLink.dataset;
   document.querySelector('#film-title').textContent = title;
-  document.querySelector('.dialog-footer > span').textContent = `${year} · ${duration}`;
-  document.querySelector('.dialog-footer a').href = filmLink.href;
+  const providerName = provider === 'youtube' ? 'YouTube' : 'Vimeo';
+  document.querySelector('.dialog-footer > span').textContent = [year, duration].filter(Boolean).join(' · ') || providerName;
+  const directLink = document.querySelector('.dialog-footer a');
+  directLink.href = filmLink.href;
+  directLink.textContent = `Watch on ${providerName}`;
   loading.hidden = false;
   const player = document.createElement('iframe');
   player.title = title;
-  player.src = `https://player.vimeo.com/video/${film}?autoplay=1&title=0&byline=0&portrait=0&dnt=1`;
-  player.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+  player.src = provider === 'youtube'
+    ? `https://www.youtube.com/embed/${film}?autoplay=1&playsinline=1`
+    : `https://player.vimeo.com/video/${film}?autoplay=1&title=0&byline=0&portrait=0&dnt=1`;
+  player.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope; clipboard-write; web-share';
   player.allowFullscreen = true;
   player.referrerPolicy = 'strict-origin-when-cross-origin';
   player.addEventListener('load', () => { loading.hidden = true; });
